@@ -36,8 +36,6 @@ export type TButton = {
 
 export type TCanvasData = THeading | TDescription | TInput | TButton;
 
-export type currentSelectedNodeT = string | null;
-
 export type supportedFontsT = { value: string; name: string };
 
 export type componentsT = {

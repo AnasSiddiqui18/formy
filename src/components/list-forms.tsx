@@ -37,12 +37,16 @@ export function ListForms({ formList }: { formList: Form[] }) {
     }
 
     async function handleFormDeletion(formId: string) {
-        const response = await actionWithToast(deleteFormAction({ formId }));
-
-        if (response.success)
-            setForms((prevForms) =>
-                prevForms.filter((form) => form.id !== formId),
+        startTransition(async () => {
+            const response = await actionWithToast(
+                deleteFormAction({ formId }),
             );
+
+            if (response.success)
+                setForms((prevForms) =>
+                    prevForms.filter((form) => form.id !== formId),
+                );
+        });
     }
 
     function navigateToPlayground(formId: string) {
@@ -77,11 +81,17 @@ export function ListForms({ formList }: { formList: Form[] }) {
                         >
                             <div className="flex justify-between p-4 items-center border-b border-gray-200">
                                 <Badge variant={e.status}>{e.status}</Badge>
-                                <Trash
-                                    className="text-red-500 hover:text-red-600 cursor-pointer"
+                                <Button
+                                    disabled={isPending}
+                                    variant="secondary"
                                     onClick={() => handleFormDeletion(e.id)}
-                                    size={20}
-                                />
+                                    title="Delete Form"
+                                >
+                                    <Trash
+                                        className="text-red-500 hover:text-red-600 cursor-pointer"
+                                        size={20}
+                                    />
+                                </Button>
                             </div>
                             <CardHeader className="p-4">
                                 <CardTitle className="text-lg font-semibold text-gray-800 mb-1">

@@ -1,14 +1,13 @@
-import { TCanvasData, currentSelectedNodeT } from '@/types';
+import { TCanvasData } from '@/types';
 import { proxy } from 'valtio';
 
 type StoreT = {
     canvasData: TCanvasData[];
-    currentSelectedNode: currentSelectedNodeT;
+    currentSelectedNode: string | null;
     get: <T extends TCanvasData['type']>(
         id: string | null,
         type: T,
     ) => Extract<TCanvasData, { type: T }> | null;
-
     isOpen: boolean;
 };
 
