@@ -2,8 +2,8 @@ import { ResponseType } from '@/lib/response';
 import { toUpperCase } from '@/lib/utils';
 import { toast } from 'sonner';
 
-export async function actionWithToast<T extends string>(
-    promise: Promise<ResponseType<T>>,
+export async function actionWithToast<T>(
+    promise: Promise<ResponseType<T>> | ResponseType<T>,
     defaultMessage?: string,
 ) {
     const toastID = toast.loading('Processing your request...', {

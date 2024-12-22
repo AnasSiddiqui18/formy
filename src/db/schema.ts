@@ -1,4 +1,4 @@
-import { relations, sql } from 'drizzle-orm';
+import { relations } from 'drizzle-orm';
 import {
     pgTable,
     timestamp,
@@ -33,10 +33,7 @@ export const forms = pgTable('forms', {
     userId: uuid('user_id').references(() => users.id, {
         onDelete: 'cascade',
     }),
-    schema: json()
-        .$type<TCanvasData[]>()
-        .default(sql`'[]'::json`)
-        .notNull(),
+    schema: json().$type<TCanvasData[]>().default([]).notNull(),
     createdAt: timestamp().defaultNow().notNull(),
     updatedAt: timestamp().defaultNow().$onUpdate(newDate).notNull(),
 });
