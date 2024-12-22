@@ -33,7 +33,7 @@ export default function Page() {
                 </p>
                 <Button
                     className="bg-violet-500 text-white mt-2 hover:bg-violet-600"
-                    onClick={() => router.push('/sign-in')}
+                    onClick={() => router.push('/dashboard')}
                 >
                     Get Started
                 </Button>
