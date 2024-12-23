@@ -1,11 +1,11 @@
 export const sendSuccess = <T>(data: T) => ({
-    success: true,
+    success: true as const,
     data: data,
     message: null,
 });
 
 export const sendError = <T>(message: T) => ({
-    success: false,
+    success: false as const,
     message,
     data: null,
 });

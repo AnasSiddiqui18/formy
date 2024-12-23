@@ -106,12 +106,10 @@ export const saveCanvasToDB = await isAuthorized(async function (
     return sendSuccess('canvas saved!');
 });
 
-export async function getForm({
-    formId,
-}: {
-    formId: string;
-}): Promise<ReturnType<typeof sendError> | Form> {
+export async function getForm({ formId }: { formId: string }) {
     const user = await auth.getUser();
+
+    if (!user) return sendError('unauthorized action');
 
     const form = await db.query.forms.findFirst({
         where: and(eq(forms.id, formId), eq(forms.userId, user!.id)),
@@ -121,7 +119,7 @@ export async function getForm({
         return sendError('Form not found or unauthorized action');
     }
 
-    return form;
+    return sendSuccess(form);
 }
 
 export async function getFormByStatus({

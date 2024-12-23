@@ -14,13 +14,13 @@ export default async function PlaygroundPage({
     const { id: formId } = await params;
     const form = await getForm({ formId });
 
-    if ('success' in form) return redirect('/sign-in');
+    if (!form.success) return redirect('/sign-in');
 
     return (
         <div className="flex h-full overflow-hidden">
             <NodeSiderbar />
-            <Canvas draftRes={form.schema} formId={formId} />
-            <InfoPanel form={form} />
+            <Canvas draftRes={form.data.schema} formId={formId} />
+            <InfoPanel form={form.data} />
             <PreviewCard />
         </div>
     );

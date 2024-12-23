@@ -1,32 +1,31 @@
 'use client';
 
-import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { useTransition } from 'react';
 import { actionWithToast } from '@/helpers/action-with-toast';
+import { sendSuccess } from '@/lib/response';
 
 export function CopyLinkBox({ formId }: { formId: string }) {
-    const { main } = useCopyToClipboard();
     const [isPending, startTransition] = useTransition();
 
     function generateURL() {
-        if (typeof window === 'undefined') return;
-
         const { port } = window.location;
-        return `http://localhost:${port}/survey/${formId}`;
+        const url = `http://localhost:${port}/survey/${formId}`;
+        window.navigator.clipboard.writeText(url);
+        return sendSuccess(url);
     }
 
     function handleCopy() {
         startTransition(async () => {
-            await actionWithToast(main(generateURL()!));
+            await actionWithToast(generateURL());
         });
     }
 
     return (
         <div className="flex justify-between gap-2 mt-2">
             <Input
-                value={generateURL()}
+                value={generateURL().data}
                 placeholder="published form url..."
                 readOnly
                 className="focus-visible:ring-0 text-gray-400"

@@ -113,9 +113,7 @@ export default function SignIn() {
                         <Button
                             type="submit"
                             className={`${
-                                isPending ||
-                                (serverSideError &&
-                                    'pointer-events-none opacity-40')
+                                isPending && 'pointer-events-none opacity-40'
                             }`}
                             disabled={isPending}
                         >

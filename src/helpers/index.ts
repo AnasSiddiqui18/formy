@@ -16,7 +16,7 @@ export function createAction<T extends ZodSchema, E>(
     };
 }
 
-export async function isAuthorized<T extends unknown[], k>(
+export function isAuthorized<T extends unknown[], k>(
     action: (user: User, ...args: T) => Promise<ResponseType<k>>,
 ) {
     return async (...args: T) => {
