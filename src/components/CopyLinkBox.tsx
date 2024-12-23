@@ -13,7 +13,7 @@ export function CopyLinkBox({ formId }: { formId: string }) {
         const { port } = window.location;
         const url = `http://localhost:${port}/survey/${formId}`;
         window.navigator.clipboard.writeText(url);
-        return sendSuccess(`http://localhost:${port}/survey/${formId}`);
+        return sendSuccess(url);
     }
 
     function handleCopy() {
