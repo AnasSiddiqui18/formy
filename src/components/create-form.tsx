@@ -1,7 +1,6 @@
 'use client';
 
 import { formCreateValidation } from '@/app/validation';
-import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogClose,
@@ -11,10 +10,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
+import { Button } from '@/components/ui/button';
 import {
     Form,
     FormControl,
@@ -22,21 +18,21 @@ import {
     FormItem,
     FormLabel,
     FormMessage,
-} from './ui/form';
-import { SetStateAction, useEffect } from 'react';
+} from '@/components/ui/form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { useEffect, useState, useTransition } from 'react';
 import { LoaderCircle } from 'lucide-react';
+import { createFormAction } from '@/actions/form';
+import { useRouter } from 'next/navigation';
+import { Input } from '@/components/ui/input';
+import { toUpperCase } from '@/lib/utils';
 
-export function CreateForm({
-    onSubmit,
-    open,
-    setOpen,
-    isPending,
-}: {
-    onSubmit: ({ formName }: z.infer<typeof formCreateValidation>) => void;
-    open: boolean;
-    setOpen: React.Dispatch<SetStateAction<boolean>>;
-    isPending: boolean;
-}) {
+export function CreateForm() {
+    const [open, setOpen] = useState(false);
+    const [isPending, startTransition] = useTransition();
+
     const form = useForm<z.infer<typeof formCreateValidation>>({
         resolver: zodResolver(formCreateValidation),
         defaultValues: {
@@ -44,27 +40,39 @@ export function CreateForm({
         },
     });
 
+    const router = useRouter();
+
     useEffect(() => {
         if (!open) {
             form.reset({ formName: '' });
         }
-    }, [open]);
+    }, [open, form]);
+
+    function onSubmit({ formName }: z.infer<typeof formCreateValidation>) {
+        startTransition(async () => {
+            await createFormAction({ title: formName });
+            setOpen(false);
+            return router.refresh();
+        });
+    }
+
+    const createFormText = 'create new form';
 
     return (
         <div className="flex justify-end py-5">
             <Dialog open={open} onOpenChange={setOpen}>
                 <DialogTrigger asChild>
                     <Button
-                        variant="outline"
-                        className="!text-white bg-violet-500 hover:bg-violet-600 focus-visible:ring-0"
+                        variant="default"
+                        className="!text-white focus-visible:ring-0"
                     >
-                        Create new form
+                        {createFormText}
                     </Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader className="flex gap-4">
                         <DialogTitle className="text-2xl font-bold">
-                            Create New Form
+                            {toUpperCase(createFormText)}
                         </DialogTitle>
                         <DialogDescription className="leading-loose">
                             {

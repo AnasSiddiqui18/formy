@@ -1,4 +1,11 @@
-import { Input } from './ui/input';
+import { useSnapshot } from '@/hooks/use-snapshot';
+import { cn } from '@/lib/utils';
+import { store } from '@/store';
+import { TCanvasData } from '@/types';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { ZodSchema, z } from 'zod';
 import { Button } from './ui/button';
 import {
     Form,
@@ -8,14 +15,7 @@ import {
     FormLabel,
     FormMessage,
 } from './ui/form';
-import { ZodSchema, z } from 'zod';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { TCanvasData } from '@/types';
-import { useSnapshot } from 'valtio';
-import { store } from '@/store';
-import { useEffect } from 'react';
-import { cn } from '@/lib/utils';
+import { Input } from './ui/input';
 
 export const RenderContent = ({
     data,
@@ -31,12 +31,12 @@ export const RenderContent = ({
         defaultValues: fields,
     });
 
-    const { isOpen } = useSnapshot(store);
+    const { isPreviewCardOpen } = useSnapshot(store);
 
     useEffect(() => {
-        if (!isOpen) return;
+        if (!isPreviewCardOpen) return;
         form.clearErrors();
-    }, [isOpen, form]);
+    }, [isPreviewCardOpen, form]);
 
     function onSubmit(values: z.infer<typeof schema>) {
         console.log('form submitted successfully 🎉', values);
@@ -83,6 +83,7 @@ export const RenderContent = ({
                                                         </p>
                                                     </div>
                                                 </FormLabel>
+
                                                 <FormControl>
                                                     <Input
                                                         className="border border-gray-100/50"

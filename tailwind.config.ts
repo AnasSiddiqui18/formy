@@ -28,6 +28,7 @@ export default {
             spacing: {
                 view: 'calc(100vh - 64px)',
             },
+
             colors: {
                 background: 'hsl(var(--background))',
                 foreground: 'hsl(var(--foreground))',
@@ -70,6 +71,11 @@ export default {
                     '5': 'hsl(var(--chart-5))',
                 },
             },
+
+            padding: {
+                section_padding: '48px',
+            },
+
             borderRadius: {
                 lg: 'var(--radius)',
                 md: 'calc(var(--radius) - 2px)',

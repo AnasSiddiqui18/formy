@@ -1,37 +1,46 @@
 'use client';
 
-import { Button } from './ui/button';
+import { updateFormStatus } from '@/actions/form';
+import { actionWithToast } from '@/helpers/action-with-toast';
+import { useFormId } from '@/hooks/use-form-id';
+import { useRouter } from 'next/navigation';
+import { useState, useTransition } from 'react';
 import {
-    AlertDialogDescription,
     AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
     AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
     AlertDialogTrigger,
-    AlertDialogFooter,
-    AlertDialogCancel,
-    AlertDialogAction,
 } from './ui/alert-dialog';
-import { TStatus } from '@/types';
+import { Button } from './ui/button';
 
-export function StatusDropdown({
-    toggleStatus,
-    isPending,
-    open,
-    setOpen,
-}: {
-    toggleStatus: (status: TStatus) => Promise<void>;
-    isPending: boolean;
-    open: boolean;
-    setOpen: (val: boolean) => void;
-}) {
+export function DeactivateDialog() {
+    const [open, setOpen] = useState(false);
+    const [isPending, startTransition] = useTransition();
+    const formId = useFormId();
+    const router = useRouter();
+
+    function deactivateForm() {
+        startTransition(async () => {
+            const response = await actionWithToast(
+                updateFormStatus({
+                    formId: formId,
+                    status: 'DRAFT',
+                }),
+            );
+
+            setOpen(false);
+            if (!response.success) return;
+            return router.refresh();
+        });
+    }
+
     return (
-        <AlertDialog
-            open={open}
-            onOpenChange={() => {
-                setOpen(true);
-            }}
-        >
+        <AlertDialog open={open} onOpenChange={setOpen}>
             <AlertDialogTrigger asChild>
                 <Button className="bg-red-600 text-white hover:bg-red-700">
                     Deactivate
@@ -50,15 +59,13 @@ export function StatusDropdown({
                 <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
                     <AlertDialogAction
-                        className="bg-red-500 hover:bg-red-600"
                         asChild
+                        onClick={(e) => e.preventDefault()}
                     >
                         <Button
                             disabled={isPending}
                             className="bg-red-500 hover:bg-red-600"
-                            onClick={async () => {
-                                await toggleStatus('INACTIVE');
-                            }}
+                            onClick={deactivateForm}
                         >
                             {isPending ? 'Deactivating...' : 'Deactivate'}
                         </Button>

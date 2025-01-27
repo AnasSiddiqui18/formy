@@ -1,33 +1,35 @@
 import { ResponseType } from '@/lib/response';
-import { toUpperCase } from '@/lib/utils';
-import { toast } from 'sonner';
+import { showToast, toUpperCase } from '@/lib/utils';
 
 export async function actionWithToast<T>(
     promise: Promise<ResponseType<T>> | ResponseType<T>,
     defaultMessage?: string,
 ) {
-    const toastID = toast.loading('Processing your request...', {
-        position: 'top-center',
-    });
+    const toast_id = showToast({
+        variant: 'loading',
+        message: 'Working on it...',
+    }) as number;
 
     const response = await promise;
 
     if (!response.success) {
-        toast.error(
-            toUpperCase(defaultMessage ?? (response.message as string)),
-            {
-                id: toastID,
-                duration: 1.5,
+        showToast({
+            variant: 'error',
+            message: toUpperCase(defaultMessage ?? response.message) as string,
+            props: {
+                id: toast_id,
             },
-        );
+        });
     } else {
-        toast.success(
-            toUpperCase(defaultMessage ?? (response.data as string)),
-            {
-                id: toastID,
-                duration: 1.5,
+        showToast({
+            variant: 'success',
+            message: toUpperCase(
+                defaultMessage ?? (response.data as string),
+            ) as string,
+            props: {
+                id: toast_id,
             },
-        );
+        });
     }
 
     return response;

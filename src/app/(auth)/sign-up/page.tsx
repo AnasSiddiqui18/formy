@@ -1,5 +1,8 @@
 'use client';
 
+import { signUpAction } from '@/actions/auth';
+import { signUpValidation } from '@/app/validation';
+import { Button } from '@/components/ui/button';
 import {
     Form,
     FormControl,
@@ -8,33 +11,32 @@ import {
     FormLabel,
     FormMessage,
 } from '@/components/ui/form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { useForm } from 'react-hook-form';
+import { signUpData } from '@/data';
+import { useQueryParams } from '@/hooks/use-query-params';
+import { handleUserAccountVerificationByEmail, showToast } from '@/lib/utils';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { LoaderCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useTransition } from 'react';
-import { signUpAction } from '@/actions/auth';
-import { LoaderCircle } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { signUpValidation } from '@/app/validation';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 
 export default function SignUp() {
     const [isPending, startTransition] = useTransition();
     const [serverSideError, setServerSideError] = useState('');
+    const { queryParams } = useQueryParams();
 
     const form = useForm<z.infer<typeof signUpValidation>>({
         resolver: zodResolver(signUpValidation),
         defaultValues: {
             email: '',
-            fullName: '',
+            full_name: '',
             password: '',
         },
     });
-    const router = useRouter();
 
-    function onSubmit(data: z.infer<typeof signUpValidation>) {
+    function onSubmit(data: typeof signUpValidation._input) {
         startTransition(async () => {
             const response = await signUpAction(data);
 
@@ -43,7 +45,18 @@ export default function SignUp() {
                 return;
             }
 
-            return router.replace('/sign-in');
+            const result = await handleUserAccountVerificationByEmail({
+                queryParams,
+                data: response.data,
+            });
+
+            if (!result.success) {
+                showToast({ variant: 'error', message: result.message });
+                return;
+            }
+
+            showToast({ variant: 'error', message: result.data });
+            return form.reset();
         });
     }
 
@@ -64,61 +77,27 @@ export default function SignUp() {
                         </div>
 
                         <div className="flex flex-col gap-3 mt-10 mb-5">
-                            <FormField
-                                control={form.control}
-                                name="fullName"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Full Name</FormLabel>
-                                        <FormControl>
-                                            <Input
-                                                placeholder="john doe"
-                                                {...field}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-
-                            <FormField
-                                control={form.control}
-                                name="email"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel className="text-sm">
-                                            Email Address
-                                        </FormLabel>
-                                        <FormControl>
-                                            <Input
-                                                placeholder="johndoe@mail.ai"
-                                                {...field}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-
-                            <FormField
-                                control={form.control}
-                                name="password"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel className="text-sm">
-                                            Password
-                                        </FormLabel>
-                                        <FormControl>
-                                            <Input
-                                                placeholder="********"
-                                                {...field}
-                                                type="password"
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
+                            {signUpData.map((data) => (
+                                <FormField
+                                    key={data.field_name}
+                                    control={form.control}
+                                    name={data.field_name}
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>{data.label}</FormLabel>
+                                            <FormControl>
+                                                <Input
+                                                    placeholder={
+                                                        data.placeholder
+                                                    }
+                                                    {...field}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            ))}
                         </div>
 
                         {serverSideError && (
@@ -132,9 +111,7 @@ export default function SignUp() {
                         <Button
                             type="submit"
                             className={`${
-                                isPending ||
-                                (serverSideError &&
-                                    'pointer-events-none opacity-40')
+                                isPending && 'pointer-events-none opacity-40'
                             }`}
                         >
                             {isPending ? (
@@ -145,7 +122,7 @@ export default function SignUp() {
                         </Button>
 
                         <Link
-                            href="/sign-in"
+                            href={`/sign-in${queryParams.redirect ? `?redirect=${queryParams.redirect}` : ''}`}
                             className="text-sm dark:text-blue-500 mx-auto mt-2"
                         >
                             Already have an account?

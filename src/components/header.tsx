@@ -1,19 +1,15 @@
 'use client';
 
-import { UserMenu } from './user-menu';
-import { Button } from './ui/button';
-import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 import { User } from '@/db/schema';
+import { useRouter } from 'next-nprogress-bar';
+import { UserMenu } from './user-menu';
 
-// type inferData<T> = NonNullable<Awaited<ReturnType<T>>>;
-
-// type userT = inferData<typeof auth.getUser>;
-
-const Header = ({ user }: { user: User }) => {
+const Header = ({ user }: { user: User | null }) => {
     const router = useRouter();
 
     return (
-        <div className="flex justify-between size-16 w-full px-12 border-b border-gray-300 items-center shrink-0 bg-white text-black">
+        <div className="flex justify-between size-16 w-full px-section_padding border-b border-gray-300 items-center shrink-0 bg-white text-black">
             <div
                 className="flex gap-2 items-center cursor-pointer"
                 onClick={() => router.push('/')}
@@ -23,10 +19,32 @@ const Header = ({ user }: { user: User }) => {
 
             <div className="flex items-center gap-5">
                 {user ? (
+                    // ! remove this div before commiting (Notification Feat)
+
+                    // <div className="flex items-center gap-7">
+                    //     <Popover>
+                    //         <PopoverTrigger asChild>
+                    //             <div className="relative">
+                    //                 <BellIcon size={30} />
+                    //                 <div className="absolute -top-1 right-0 size-3 rounded-full bg-red-500"></div>
+                    //             </div>
+                    //         </PopoverTrigger>
+                    //         <PopoverContent className="w-80 mr-32 h-60">
+                    //             <div className="flex items-center justify-center h-full">
+                    //                 <div className="flex flex-col items-center gap-3">
+                    //                     <MailX size={40} className='text-primary' />
+                    //                     <span className="text-gray-400">
+                    //                         No Messages...
+                    //                     </span>
+                    //                 </div>
+                    //             </div>
+                    //         </PopoverContent>
+                    //     </Popover>
+                    // </div>
                     <UserMenu user={user} />
                 ) : (
                     <Button
-                        className="bg-violet-500 text-white mt-2 hover:bg-violet-600"
+                        className="text-white mt-2"
                         onClick={() => router.push('/sign-in')}
                     >
                         Get Started

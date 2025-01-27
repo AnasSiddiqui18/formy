@@ -1,12 +1,12 @@
 'use client';
 
+import { useSnapshot } from '@/hooks/use-snapshot';
 import { toUpperCase } from '@/lib/utils';
-import { useSnapshot } from 'valtio';
 import { store } from '@/store';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FormField } from './form-field';
-import { Switch } from './ui/switch';
 import { Label } from './ui/label';
+import { Switch } from './ui/switch';
 
 type ContentState = {
     content: string;
@@ -27,20 +27,21 @@ export function InputInfo() {
         fieldName: selectedNode?.fieldName || '',
     });
 
-    const inputRef = useRef<HTMLInputElement>(null);
-
     useEffect(() => {
         if (!selectedNode) return;
+
         selectedNode.content = content.content as string;
         selectedNode.label = content.label as string;
         selectedNode.placeHolder = content.placeholder as string;
-        selectedNode.validation.required = content.isChecked as boolean;
         selectedNode.fieldName = content.fieldName as string;
+        selectedNode.validation = {
+            ...selectedNode.validation,
+            required: content.isChecked,
+        };
     }, [content, selectedNode]);
 
     useEffect(() => {
         if (!selectedNode || !selectedNode.validation) return;
-        inputRef.current?.focus();
 
         setContent({
             content: selectedNode.content,

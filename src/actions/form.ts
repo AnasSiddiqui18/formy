@@ -7,15 +7,15 @@ import {
     inputSchema,
 } from '@/app/validation';
 import { db } from '@/db';
-import { Form, User, forms } from '@/db/schema';
+import { User, forms } from '@/db/schema';
 import { isAuthorized } from '@/helpers';
-import { auth } from '@/lib/auth';
-import { sendSuccess, sendError, ResponseType } from '@/lib/response';
+import { sendError, sendSuccess } from '@/lib/response';
 import { TCanvasData, TStatus } from '@/types';
+import cuid2 from '@paralleldrive/cuid2';
 import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
-export const createFormAction = await isAuthorized(async function (
+export const createFormAction = isAuthorized(async function (
     user: User,
     args: { title: string },
 ) {
@@ -31,33 +31,33 @@ export const createFormAction = await isAuthorized(async function (
         .insert(forms)
         .values({
             title: args.title,
-            userId: user.id,
+            user_id: user.id,
         })
         .returning();
 
     return sendSuccess('form created successfully');
 });
 
-export const getFormsAction = await isAuthorized(async (user) => {
+export const getFormsAction = isAuthorized(async (user) => {
     const response = await db.query.forms.findMany({
-        where: eq(forms.userId, user.id),
+        where: eq(forms.user_id, user.id),
     });
 
     return sendSuccess(response);
 });
 
-export const deleteFormAction = await isAuthorized(async function (
+export const deleteFormAction = isAuthorized(async function (
     user: User,
     args: {
         formId: string;
     },
 ) {
     try {
-        await new Promise((resolve) => setTimeout(resolve, 3000));
+        await new Promise((resolve) => setTimeout(resolve, 2000));
 
         const delForm = await db
             .delete(forms)
-            .where(and(eq(forms.id, args.formId), eq(forms.userId, user.id)))
+            .where(and(eq(forms.id, args.formId), eq(forms.user_id, user.id)))
             .returning();
 
         if (!delForm.length) {
@@ -81,38 +81,52 @@ export async function isFormExist({ formId }: { formId: string }) {
     return { success: true };
 }
 
-export const saveCanvasToDB = await isAuthorized(async function (
+export const saveCanvasToDB = isAuthorized(async function (
     user: User,
     args: {
         canvasData: TCanvasData[];
         formId: string;
     },
 ) {
+    const { canvasData } = args;
+
+    const updatedCanvasData = canvasData.map((data) => ({
+        ...data,
+        id: cuid2.createId(),
+    }));
+
     const validation = z.array(
         z.union([headingSchema, descriptionSchema, inputSchema, buttonSchema]),
     );
 
-    const result = validation.safeParse(args.canvasData);
+    const result = validation.safeParse(canvasData);
 
     if (!result.success) return sendError('Failed to save canvas.');
 
     const response = await db
         .update(forms)
-        .set({ schema: args.canvasData })
-        .where(and(eq(forms.id, args.formId), eq(forms.userId, user.id)))
+        .set({ schema: updatedCanvasData })
+        .where(and(eq(forms.id, args.formId), eq(forms.user_id, user.id)))
         .returning();
 
     if (!response.length) return sendError('Failed to save canvas.');
-    return sendSuccess('canvas saved!');
+
+    const { schema } = response[0];
+    return sendSuccess(schema);
 });
 
-export async function getForm({ formId }: { formId: string }) {
-    const user = await auth.getUser();
+export const getForm = isAuthorized(async function (
+    user,
+    args: {
+        formId: string;
+    },
+) {
+    const { formId } = args;
 
     if (!user) return sendError('unauthorized action');
 
     const form = await db.query.forms.findFirst({
-        where: and(eq(forms.id, formId), eq(forms.userId, user!.id)),
+        where: and(eq(forms.id, formId), eq(forms.user_id, user.id)),
     });
 
     if (!form) {
@@ -120,7 +134,7 @@ export async function getForm({ formId }: { formId: string }) {
     }
 
     return sendSuccess(form);
-}
+});
 
 export async function getFormByStatus({
     formId,
@@ -128,7 +142,7 @@ export async function getFormByStatus({
 }: {
     formId: string;
     formStatus: TStatus;
-}): Promise<ResponseType<string> | Form> {
+}) {
     const form = await db.query.forms.findFirst({
         where: and(eq(forms.id, formId), eq(forms.status, formStatus)),
     });
@@ -137,68 +151,10 @@ export async function getFormByStatus({
         return sendError('Form not found!');
     }
 
-    return form;
+    return sendSuccess(form);
 }
 
-export const isNodePresentInDB = async ({
-    formId,
-    nodeId,
-}: {
-    formId: string;
-    nodeId: string;
-}) => {
-    const form = await db.query.forms.findFirst({
-        where: eq(forms.id, formId),
-    });
-
-    const schema = form?.schema.find((node) => node.id === nodeId);
-
-    if (!schema) {
-        return sendError('schema not found');
-    }
-
-    return sendSuccess('schema exist');
-};
-
-export const deleteCanvasEl = await isAuthorized(async function (
-    user: User,
-    args: {
-        formId: string;
-        nodeId: string;
-    },
-) {
-    const { formId, nodeId } = args;
-
-    const form = await db.query.forms.findFirst({
-        where: and(eq(forms.id, formId), eq(forms.userId, user.id)),
-    });
-
-    if (!form) {
-        return sendError('form or form schema not found');
-    }
-
-    const updatedSchema = form.schema.filter(
-        (node: TCanvasData) => node.id !== nodeId,
-    );
-
-    const updatedForm = await db
-        .update(forms)
-        .set({
-            schema: updatedSchema,
-        })
-        .where(and(eq(forms.id, formId), eq(forms.userId, user.id)))
-        .returning();
-
-    if (!updatedForm) {
-        return sendError('Operation failed');
-    }
-
-    console.log('updated form', updatedForm);
-
-    return sendSuccess('Node deleted successfully');
-});
-
-export const emptyCanvas = await isAuthorized(async function (
+export const emptyCanvas = isAuthorized(async function (
     user,
     args: { formId: string },
 ) {
@@ -209,7 +165,7 @@ export const emptyCanvas = await isAuthorized(async function (
         .set({
             schema: [],
         })
-        .where(and(eq(forms.id, formId), eq(forms.userId, user.id)))
+        .where(and(eq(forms.id, formId), eq(forms.user_id, user.id)))
         .returning();
 
     if (!emptyCanvas) return sendError('Operation failed');
@@ -217,27 +173,25 @@ export const emptyCanvas = await isAuthorized(async function (
     return sendSuccess('Canvas cleared');
 });
 
-export const toggleFormStatus = await isAuthorized(async function (
+export const updateFormStatus = isAuthorized(async function (
     user,
     args: {
         formId: string;
-        status: 'DRAFT' | 'PUBLISHED' | 'INACTIVE';
+        status: TStatus;
     },
 ) {
     const { formId, status } = args;
 
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    const updateFormStatus = await db
+    const updateStatus = await db
         .update(forms)
         .set({
             status,
         })
-        .where(and(eq(forms.id, formId), eq(forms.userId, user.id)))
+        .where(and(eq(forms.id, formId), eq(forms.user_id, user.id)))
         .returning();
 
-    if (!updateFormStatus) {
-        return sendError('Operation failed or unAuthorized request');
+    if (!updateStatus) {
+        return sendError('Operation failed');
     }
 
     if (status === 'PUBLISHED') {

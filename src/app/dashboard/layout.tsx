@@ -1,14 +1,11 @@
 import { DashboardSidebar } from '@/components/dashboard-sidebar';
-import Protected from '@/components/protected';
-import { PropsWithChildren } from 'react';
+import { Protected } from '@/helpers';
 
-export default async function Layout({ children }: PropsWithChildren) {
+export default Protected(function ({ children }) {
     return (
         <div className="flex">
-            <Protected>
-                <DashboardSidebar />
-                {children}
-            </Protected>
+            <DashboardSidebar />
+            {children}
         </div>
     );
-}
+});

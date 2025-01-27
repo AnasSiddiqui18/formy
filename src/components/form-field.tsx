@@ -13,9 +13,10 @@ export function FormField({ label, value, fn, placeholder }: FormFieldProps) {
         <div>
             <Label className="text-gray-400">{label}</Label>
             <Input
-                className="focus:outline-none mb-3 text-gray-500 border border-gray-300"
+                className="focus-visible:ring-0 mb-3 text-gray-500 border border-gray-300"
                 value={value}
                 onChange={(e) => fn(e.target.value)}
+                placeholder={placeholder}
             />
         </div>
     );

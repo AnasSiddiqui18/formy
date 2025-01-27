@@ -1,15 +1,22 @@
-import { CopyLinkBox } from '@/components/CopyLinkBox';
+import { BackButton } from '@/components/back-button';
+import { CopyLinkBox } from '@/components/copy-link-box';
 
 export default async function PublishForm({
     params,
 }: {
-    params: { id: string };
+    params: Promise<{ id: string }>;
 }) {
     const { id: formId } = await params;
 
     return (
         <div className="min-h-view bg-white flex justify-center items-center grid-bg relative">
             <div className="bg-black opacity-50 absolute w-full h-full z-0"></div>
+
+            <div>
+                <BackButton
+                    href={`http://localhost:${process.env.PORT}/playground/${formId}`}
+                />
+            </div>
 
             <div className="max-w-[400px] h-[250px] w-full dark:border border-2 py-5 px-5 flex flex-col gap-4 rounded-xl bg-white z-10">
                 <h2 className="text-gray-700 text-2xl font-bold">

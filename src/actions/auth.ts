@@ -1,22 +1,22 @@
 'use server';
 
-import argon from 'argon2';
+import { signInValidation, signUpValidation } from '@/app/validation';
 import { db } from '@/db';
 import { users } from '@/db/schema';
-import { sendError, sendSuccess } from '@/lib/response';
 import { createAction } from '@/helpers';
-import { eq } from 'drizzle-orm';
 import { auth } from '@/lib/auth';
-import { signUpValidation, signInValidation } from '@/app/validation';
+import { env } from '@/lib/env';
+import { sendError, sendSuccess } from '@/lib/response';
+import argon from 'argon2';
+import { eq } from 'drizzle-orm';
+import jwt from 'jsonwebtoken';
 
 export const signUpAction = createAction(signUpValidation, async (data) => {
-    const isEmailExist = await db
-        .select()
-        .from(users)
-        .where(eq(users.email, data.email));
+    const isEmailExist = await db.query.users.findFirst({
+        where: eq(users.email, data.email),
+    });
 
-    if (isEmailExist.length) {
-        console.log('duplicate user found', isEmailExist);
+    if (isEmailExist) {
         return sendError('user already exist');
     }
 
@@ -27,12 +27,13 @@ export const signUpAction = createAction(signUpValidation, async (data) => {
         password: hashedPassword,
     };
 
-    await db.insert(users).values(userObj).returning({
-        fullName: users.fullName,
+    const user = await db.insert(users).values(userObj).returning({
         email: users.email,
     });
 
-    return sendSuccess('user created successfully 🎉');
+    if (!user) return sendError('account creation failed!');
+
+    return sendSuccess(user[0].email);
 });
 
 export const signInAction = createAction(signInValidation, async (data) => {
@@ -41,23 +42,48 @@ export const signInAction = createAction(signInValidation, async (data) => {
         .from(users)
         .where(eq(users.email, data.email));
 
-    if (!user.length) {
-        return sendError('user not found');
-    }
+    if (!user.length) return sendError('user not found');
 
-    const verifyPassword = await argon.verify(user[0].password, data.password);
+    const currentUser = user[0];
 
-    if (!verifyPassword) {
-        return sendError('password not valid');
-    }
+    const verifyPassword = await argon.verify(
+        currentUser.password,
+        data.password,
+    );
 
-    const session = await auth.createSession({ id: user[0].id });
+    if (!verifyPassword) return sendError('password not valid');
 
-    if (!session.success) {
-        return sendError('Failed to signIn');
-    }
+    const session = await auth.createSession({ id: currentUser.id });
 
-    return sendSuccess('user signin successfully');
+    if (!session.success) return sendError('Operation Failed');
+
+    return sendSuccess(currentUser);
 });
 
 export const logOut = async () => await auth.deleteSession();
+
+export async function verifyToken(token: string) {
+    const verifiedToken = jwt.verify(token, env.JWT_SECRET) as {
+        email: string;
+    };
+
+    const user = await db.query.users.findFirst({
+        where: eq(users.email, verifiedToken.email),
+        columns: {
+            id: true,
+        },
+    });
+
+    if (!user) return sendError('Verificaion failed.');
+
+    const updateUser = await db
+        .update(users)
+        .set({ email_verified: true })
+        .where(eq(users.id, user.id))
+        .returning();
+
+    if (!updateUser.length) return sendError('update failed');
+    const { success } = await auth.createSession({ id: user.id });
+    if (!success) return sendError('Operation failed');
+    return sendSuccess('Operation successful');
+}

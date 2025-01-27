@@ -1,5 +1,9 @@
 'use client';
 
+import { supportedFonts } from '@/data';
+import { useSnapshot } from '@/hooks/use-snapshot';
+import { toUpperCase } from '@/lib/utils';
+import { store } from '@/store';
 import { useEffect, useRef, useState } from 'react';
 import { Input } from './ui/input';
 import {
@@ -10,10 +14,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from './ui/select';
-import { useSnapshot } from 'valtio';
-import { store } from '@/store';
-import { toUpperCase } from '@/lib/utils';
-import { supportedFonts } from '@/data';
 
 export function HeadingInfo() {
     const { currentSelectedNode } = useSnapshot(store);
@@ -53,10 +53,11 @@ export function HeadingInfo() {
                 {toUpperCase(selectedNode.type as string)}
             </h3>
             <Input
-                className="focus:outline-none mb-3 text-gray-500 border border-gray-300"
+                className="focus-visible:ring-0 mb-3 text-gray-500 border border-gray-300"
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
                 ref={inputRef}
+                placeholder="Enter heading"
             />
             <div className="flex flex-col gap-2">
                 <Select

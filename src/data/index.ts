@@ -1,11 +1,12 @@
-import { TCanvasData, componentsT, supportedFontsT } from '@/types';
+import { TCanvasData, Tcomponents, TsupportedFonts } from '@/types';
 import {
-    Type,
     FileText,
-    Pencil,
-    MousePointerClick,
     Layers,
     MessagesSquare,
+    MousePointerClick,
+    Pencil,
+    TrendingUpDown,
+    Type,
 } from 'lucide-react';
 
 export const dashboardContent = [
@@ -20,9 +21,15 @@ export const dashboardContent = [
         icon: MessagesSquare,
         href: '/dashboard/responses',
     },
+
+    {
+        content: 'Analytics',
+        icon: TrendingUpDown,
+        href: '/dashboard/analytics',
+    },
 ];
 
-export const contentComponents: componentsT[] = [
+export const contentComponents: Tcomponents[] = [
     {
         content: 'heading',
         type: 'heading',
@@ -36,7 +43,7 @@ export const contentComponents: componentsT[] = [
     },
 ];
 
-export const formComponents: componentsT[] = [
+export const formComponents: Tcomponents[] = [
     {
         content: 'input',
         type: 'input',
@@ -52,7 +59,7 @@ export const formComponents: componentsT[] = [
 
 export const canvasData: TCanvasData[] = [];
 
-export const supportedFonts: supportedFontsT[] = [
+export const supportedFonts: TsupportedFonts[] = [
     {
         value: 'Poppins',
         name: 'Poppins',
@@ -61,5 +68,41 @@ export const supportedFonts: supportedFontsT[] = [
     {
         value: 'Roboto',
         name: 'Roboto',
+    },
+];
+
+export const signInData = [
+    {
+        label: 'Email Address',
+        placeholder: 'johndoe@mail.ai',
+        field_name: 'email' as const,
+        type: 'email',
+    },
+
+    {
+        label: 'Password',
+        placeholder: '********',
+        field_name: 'password' as const,
+        type: 'password',
+    },
+];
+
+export const signUpData = [
+    {
+        label: 'Full Name',
+        placeholder: 'john doe',
+        field_name: 'full_name' as const,
+    },
+
+    {
+        label: 'Email Address',
+        placeholder: 'johndoe@mail.ai',
+        field_name: 'email' as const,
+    },
+
+    {
+        label: 'Password',
+        placeholder: '********',
+        field_name: 'password' as const,
     },
 ];

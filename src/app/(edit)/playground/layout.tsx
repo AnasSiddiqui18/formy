@@ -1,6 +1,6 @@
-import Protected from '@/components/protected';
+import { Protected } from '@/helpers';
 import { PropsWithChildren } from 'react';
 
-export default function Layout({ children }: PropsWithChildren) {
-    return <Protected>{children}</Protected>;
-}
+export default Protected(function ({ children }: PropsWithChildren) {
+    return children;
+});

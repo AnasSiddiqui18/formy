@@ -1,6 +1,11 @@
 'use client';
 
+import { logOut } from '@/actions/auth';
+import { User } from '@/db/schema';
+import { getInitials } from '@/lib/utils';
 import { LogOut } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Avatar } from './ui/avatar';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -9,29 +14,20 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from './ui/dropdown-menu';
-import { logOut } from '@/actions/auth';
-import { useRouter } from 'next/navigation';
-import { Avatar } from './ui/avatar';
-import { User } from '@/db/schema';
-import { getInitials } from '@/lib/utils';
 
-export function UserMenu({ user }: { user: Omit<User, 'password'> }) {
+export function UserMenu({ user }: { user: User }) {
     const router = useRouter();
 
     async function handleLogOut() {
         const response = await logOut();
-        console.log('user logout successfully', response);
-
-        if (response?.success) {
-            return router.replace('/sign-in');
-        }
+        if (!response.success) return router.replace('/sign-in');
     }
 
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <Avatar className="rounded-full bg-violet-600 hover:bg-violet-700 flex justify-center items-center font-semibold cursor-pointer text-white">
-                    {getInitials(user.fullName)}
+                    {getInitials(user.full_name)}
                 </Avatar>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-20">

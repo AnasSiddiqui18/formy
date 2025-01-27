@@ -1,10 +1,10 @@
 'use client';
 
-import { store } from '@/store';
-import { CirclePlus } from 'lucide-react';
-import { createId } from '@paralleldrive/cuid2';
-import { TCanvasData } from '@/types';
 import { toUpperCase } from '@/lib/utils';
+import { store } from '@/store';
+import { TCanvasData } from '@/types';
+import { createId } from '@paralleldrive/cuid2';
+import { CirclePlus } from 'lucide-react';
 
 export function AddIcon({ nodeType }: { nodeType: TCanvasData['type'] }) {
     function addNodeToCanvas() {
@@ -46,15 +46,7 @@ export function AddIcon({ nodeType }: { nodeType: TCanvasData['type'] }) {
             },
         };
 
-        const config = nodeConfig[nodeType];
-
-        store.canvasData = [...store.canvasData, config];
-
-        store.currentSelectedNode = null;
-
-        setTimeout(() => {
-            store.currentSelectedNode = nodeID;
-        }, 0);
+        return store.canvasData.push(nodeConfig[nodeType]);
     }
 
     return (

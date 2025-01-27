@@ -5,6 +5,7 @@ import Header from '@/components/header';
 import { UserProvider } from './providers/user-provider';
 import { auth } from '@/lib/auth';
 import { Toaster } from 'sonner';
+import { Progressbar } from '@/components/progress-bar';
 
 export const metadata: Metadata = {
     title: 'Create Next App',
@@ -23,9 +24,10 @@ export default async function RootLayout({
             <body
                 className={`${poppinsFont.className} ${robotoFont.variable} antialiased flex flex-col h-screen`}
             >
+                <Progressbar />
                 <Toaster richColors />
-                <UserProvider userPromise={user!}>
-                    <Header user={user!} />
+                <UserProvider userPromise={user}>
+                    <Header user={user.data} />
                     {children}
                 </UserProvider>
             </body>

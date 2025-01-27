@@ -1,50 +1,60 @@
 'use client';
 
-import { cn, createZodSchema, generateDefaultValues } from '@/lib/utils';
+import { createFormResponse } from '@/actions/form-response';
+import { createZodSchema } from '@/components/codebox/create-zod-schema';
+import { generateDefaultValues } from '@/components/codebox/generate-default-values';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { actionWithToast } from '@/helpers/action-with-toast';
+import { useFormId } from '@/hooks/use-form-id';
+import { cn } from '@/lib/utils';
 import { TCanvasData } from '@/types';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTransition } from 'react';
 import { useForm } from 'react-hook-form';
-import { z } from 'zod';
 import {
+    Form,
     FormControl,
     FormField,
     FormItem,
     FormLabel,
     FormMessage,
-    Form,
 } from './ui/form';
-import { Input } from './ui/input';
-import { Button } from './ui/button';
-import { useTransition } from 'react';
 
-export function SurveyForm({ formRes }: { formRes: TCanvasData[] }) {
+export function SurveyForm({ data }: { data: TCanvasData[] }) {
     const [isPending, startTransition] = useTransition();
+    const formId = useFormId();
+    const schema = createZodSchema(data);
+    const defaultFields = generateDefaultValues(data);
 
-    const schema = createZodSchema(formRes);
-    const defaultFields = generateDefaultValues(formRes);
-
-    const form = useForm<z.infer<typeof schema>>({
+    const form = useForm({
         resolver: zodResolver(schema),
         defaultValues: defaultFields,
     });
 
-    async function onSubmit(values: z.infer<typeof schema>) {
+    async function onSubmit(values: Record<string, string>) {
         startTransition(async () => {
-            await new Promise((resolve) => setTimeout(resolve, 2000));
-            console.log('form submitted by user', values);
+            const response = await actionWithToast(
+                createFormResponse({ values, data, form_id: formId }),
+            );
+
+            if (!response.success) {
+                return form.reset();
+            }
+
             form.reset();
         });
     }
 
     return (
-        <div className="h-full flex-1 flex items-center justify-center">
+        <div className="flex justify-center py-4">
             <Form {...form}>
                 <form
-                    className="max-w-[400px] w-full dark:border border-2 py-7 px-5 flex flex-col rounded-xl"
+                    className="max-w-[400px] w-full border-2 py-7 px-5 flex flex-col rounded-xl"
                     onSubmit={form.handleSubmit(onSubmit)}
                 >
                     <div className="flex flex-col gap-5 mt-4 mb-5">
-                        {formRes.map((field) => {
+                        {data.map((field) => {
                             switch (field.type) {
                                 case 'heading':
                                     return (
@@ -88,6 +98,11 @@ export function SurveyForm({ formRes }: { formRes: TCanvasData[] }) {
                                                                 field.placeHolder
                                                             }
                                                             {...inputField}
+                                                            onChange={(e) => {
+                                                                inputField.onChange(
+                                                                    e,
+                                                                );
+                                                            }}
                                                             type={
                                                                 field.fieldName.toLowerCase() ===
                                                                 'password'

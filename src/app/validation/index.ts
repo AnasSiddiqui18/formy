@@ -12,7 +12,7 @@ const password = z
     .max(128, 'Password cannot exceed 128 characters.');
 
 export const signUpValidation = z.object({
-    fullName: z
+    full_name: z
         .string()
         .min(1, 'fullName is required')
         .max(30, 'FullName cannot exceed 30 characters'),

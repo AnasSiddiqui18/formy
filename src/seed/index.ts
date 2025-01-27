@@ -1,36 +1,31 @@
 import { db } from '@/db';
-import { forms, users } from '@/db/schema';
-import argon2 from 'argon2';
+import { formResponses } from '@/db/schema';
+import { subDays } from 'date-fns';
 
 async function main() {
-    try {
-        const hashedPassword = await argon2.hash('password123');
+    const users = [
+        {
+            username: 'new response',
+            respondent_id: '79d73829-89de-49fb-a735-9e5b9d28cacb',
+            form_id: '0c92f2c7-9ac4-471a-8da3-edfe65c2e318',
+        },
+    ];
 
-        const newUser: Omit<
-            typeof users.$inferSelect,
-            'id' | 'createdAt' | 'updatedAt'
-        > = {
-            fullName: 'john doe',
-            email: 'johndoe2@gmail.com',
-            password: hashedPassword,
-        };
+    const subdays = subDays(new Date(), 2);
 
-        const response = await db.insert(users).values(newUser).returning();
-
-        const newForm: Omit<
-            typeof forms.$inferSelect,
-            'id' | 'createdAt' | 'updatedAt'
-        > = {
-            title: 'Feedback form',
-            userId: response[0].id,
-            isPublished: false,
-        };
-
-        const formResponse = await db.insert(forms).values(newForm).returning();
-        console.log('data seeded successfully', formResponse);
-    } catch (error) {
-        console.log('error while seeding the database', error);
-    }
+    users.forEach(async (user) => {
+        await db
+            .insert(formResponses)
+            .values({
+                content: {
+                    name: user.username,
+                },
+                form_id: user.form_id,
+                respondent_id: user.respondent_id,
+                created_at: subdays,
+            })
+            .returning();
+    });
 }
 
 main();

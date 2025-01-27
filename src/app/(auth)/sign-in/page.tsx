@@ -1,31 +1,33 @@
 'use client';
 
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { useState, useTransition } from 'react';
+import { signInAction } from '@/actions/auth';
+import { signInValidation } from '@/app/validation';
+import { Button } from '@/components/ui/button';
 import {
+    Form,
     FormControl,
     FormField,
     FormItem,
     FormLabel,
     FormMessage,
-    Form,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { LoaderCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { signInData } from '@/data';
+import { useQueryParams } from '@/hooks/use-query-params';
+import { handleUserAccountVerificationByEmail, showToast } from '@/lib/utils';
+import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
-import { z } from 'zod';
-import { signInAction } from '@/actions/auth';
 import { useRouter } from 'next/navigation';
-import { signInValidation } from '@/app/validation';
+import { useState, useTransition } from 'react';
+import { useForm } from 'react-hook-form';
 
 export default function SignIn() {
     const [isPending, startTransition] = useTransition();
     const [serverSideError, setServerSideError] = useState('');
     const router = useRouter();
+    const { queryParams } = useQueryParams();
 
-    const form = useForm<z.infer<typeof signInValidation>>({
+    const form = useForm({
         resolver: zodResolver(signInValidation),
         defaultValues: {
             email: '',
@@ -33,13 +35,40 @@ export default function SignIn() {
         },
     });
 
-    function onSubmit(values: z.infer<typeof signInValidation>) {
+    function onSubmit(values: typeof signInValidation._input) {
         startTransition(async () => {
             const response = await signInAction(values);
 
             if (!response.success) {
                 setServerSideError(response.message as string);
                 return;
+            }
+
+            if (!response.data.email_verified) {
+                const result = await handleUserAccountVerificationByEmail({
+                    queryParams,
+                    data: response.data.email,
+                });
+
+                if (!result.success) {
+                    showToast({
+                        variant: 'error',
+                        message: result.message,
+                    });
+
+                    return;
+                }
+
+                showToast({
+                    variant: 'success',
+                    message: result.data,
+                });
+
+                return;
+            }
+
+            if (queryParams.redirect) {
+                return router.replace(queryParams.redirect);
             }
 
             return router.replace('/dashboard');
@@ -62,44 +91,30 @@ export default function SignIn() {
                         </div>
 
                         <div className="flex flex-col gap-3 mt-10 mb-5">
-                            <FormField
-                                control={form.control}
-                                name="email"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel className="text-sm">
-                                            Email Address
-                                        </FormLabel>
-                                        <FormControl>
-                                            <Input
-                                                placeholder="johndoe@mail.ai"
-                                                {...field}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-
-                            <FormField
-                                control={form.control}
-                                name="password"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel className="text-sm">
-                                            Password
-                                        </FormLabel>
-                                        <FormControl>
-                                            <Input
-                                                placeholder="********"
-                                                {...field}
-                                                type="password"
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
+                            {signInData.map((data) => (
+                                <FormField
+                                    key={data.field_name}
+                                    control={form.control}
+                                    name={data.field_name}
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel className="text-sm">
+                                                {data.label}
+                                            </FormLabel>
+                                            <FormControl>
+                                                <Input
+                                                    placeholder={
+                                                        data.placeholder
+                                                    }
+                                                    {...field}
+                                                    type={data.type}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            ))}
                         </div>
 
                         {serverSideError && (
@@ -116,19 +131,16 @@ export default function SignIn() {
                                 isPending && 'pointer-events-none opacity-40'
                             }`}
                             disabled={isPending}
+                            loading={isPending}
                         >
-                            {isPending ? (
-                                <LoaderCircle className="animate-spin" />
-                            ) : (
-                                'Submit'
-                            )}
+                            Submit
                         </Button>
 
                         <Link
-                            href="/sign-up"
+                            href={`/sign-up${queryParams.redirect ? `?redirect=${queryParams.redirect}` : ''} `}
                             className="text-sm dark:text-blue-500 mx-auto mt-2"
                         >
-                            {`Doesn't have an account?`}
+                            Doesn&apos;t have an account?
                         </Link>
                     </form>
                 </Form>

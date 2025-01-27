@@ -1,10 +1,11 @@
 'use client';
 
-import { TCanvasData } from '@/types';
+import { sendAccountVerificationEmail } from '@/email/email';
+import { sendError, sendSuccess } from '@/lib/response';
 import { clsx, type ClassValue } from 'clsx';
-import { usePathname } from 'next/navigation';
+import { NonUndefined } from 'react-hook-form';
+import { toast, TToast as ToastProps } from 'sonner';
 import { twMerge } from 'tailwind-merge';
-import { z } from 'zod';
 
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -21,7 +22,7 @@ export function getInitials(str: string) {
 }
 
 export function toUpperCase(str: string) {
-    if (!str.trim().length) return;
+    if (!str || !str.trim().length) return;
 
     return str
         .trim()
@@ -30,37 +31,43 @@ export function toUpperCase(str: string) {
         .join(' ');
 }
 
-export function ExtractFormID() {
-    const response = usePathname();
-    const formID = response.split('/')[2];
-    return formID;
-}
-
-export function createZodSchema(canvasData: Readonly<TCanvasData[]>) {
-    const validatedSchema = canvasData.reduce(
-        (schema, field) => {
-            if (field.type === 'input' && field.validation.required) {
-                schema[field.fieldName] = z
-                    .string()
-                    .min(1, `${field.fieldName} is required`);
-            }
-
-            return schema;
+export function showToast({
+    variant,
+    message,
+    props,
+}: {
+    variant: NonUndefined<ToastProps['type']>;
+    message: string;
+    props?: ToastProps;
+}) {
+    const toast_id = toast[variant](message, {
+        ...props,
+        duration: 1500,
+        cancel: {
+            label: 'X',
+            onClick: () => toast.dismiss(toast_id),
         },
-        {} as Record<string, z.ZodString>,
-    );
-
-    return z.object(validatedSchema);
-}
-
-export function generateDefaultValues(canvasData: Readonly<TCanvasData[]>) {
-    const object: Record<string, string> = {};
-
-    canvasData.map((e) => {
-        if (e.type === 'input') {
-            object[e.fieldName] = '';
-        }
     });
 
-    return object;
+    if (variant === 'loading') return toast_id;
+
+    return null;
+}
+
+export async function handleUserAccountVerificationByEmail({
+    queryParams,
+    data,
+}: {
+    queryParams: {
+        [key: string]: string | undefined;
+    };
+    data: string;
+}) {
+    const link = queryParams.redirect
+        ? `http://localhost:${window.location.port}/verify-email?redirect=${queryParams.redirect}`
+        : undefined;
+
+    const email = await sendAccountVerificationEmail(data, link);
+    if (!email.success) return sendError('Error sending email');
+    return sendSuccess('Please check your mail');
 }

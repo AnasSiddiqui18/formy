@@ -1,55 +1,36 @@
 'use client';
 
-import { useSnapshot } from 'valtio';
+import { ClearCanvasDialog } from '@/components/clear-canvas-dialog';
+import { useSnapshot } from '@/hooks/use-snapshot';
+import { cn } from '@/lib/utils';
 import { store } from '@/store';
-import { useEffect, useMemo, useState } from 'react';
-import { Button } from './ui/button';
-import { emptyCanvas } from '@/actions/form';
-import { actionWithToast } from '@/helpers/action-with-toast';
+import { TCanvasData } from '@/types';
 import {
     DndContext,
     DragEndEvent,
+    DragOverlay,
     PointerSensor,
     closestCorners,
     useSensor,
     useSensors,
-    DragOverlay,
 } from '@dnd-kit/core';
 import {
     SortableContext,
     arrayMove,
     verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { TCanvasData } from '@/types';
+import { useEffect, useMemo, useState } from 'react';
 import { SortableItem } from './sortable-items';
-import { cn } from '@/lib/utils';
 
-export function Canvas({
-    draftRes,
-    formId,
-}: {
-    draftRes?: TCanvasData[];
-    formId: string;
-}) {
-    const { canvasData } = useSnapshot(store);
+export function Canvas({ draftRes }: { draftRes?: TCanvasData[] }) {
     const [activeId, setActiveId] = useState<string | null>(null);
+    const { canvasData } = useSnapshot(store);
 
     useEffect(() => {
         if (!draftRes) return;
 
         store.canvasData = draftRes;
     }, [draftRes]);
-
-    async function canvasEmpty() {
-        const response = await actionWithToast(emptyCanvas({ formId }));
-
-        if (!response?.success) {
-            console.log('operation not successful', response.message);
-        }
-
-        store.canvasData = [];
-        store.currentSelectedNode = '';
-    }
 
     function getTaskPosition(id: string) {
         return canvasData.findIndex((node) => node.id === id);
@@ -60,19 +41,16 @@ export function Canvas({
 
         const previousPos = getTaskPosition(active?.id as string);
         const newPos = getTaskPosition(over?.id as string);
-        const modifiedPosition = arrayMove(
-            [...canvasData],
-            previousPos,
-            newPos,
-        );
-
+        const modifiedPosition = arrayMove(canvasData, previousPos, newPos);
         setActiveId(null);
         return (store.canvasData = modifiedPosition);
     }
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
-            activationConstraint: { distance: 8 },
+            activationConstraint: {
+                distance: 8,
+            },
         }),
     );
 
@@ -81,15 +59,16 @@ export function Canvas({
     }, [activeId, canvasData]);
 
     return (
-        <div className="h-full bg-gray-300 flex-1 px-5 py-6 flex flex-col overflow-visible">
+        <div
+            className={cn(
+                'h-full bg-gray-300 flex-1 px-5 py-6 flex flex-col overflow-visible',
+                {
+                    'canvas-img': !canvasData.length,
+                },
+            )}
+        >
             <div className="flex justify-end mb-5">
-                <Button
-                    className="bg-red-800 hover:bg-red-900"
-                    onClick={canvasEmpty}
-                    disabled={!store.canvasData?.length}
-                >
-                    Clear Canvas
-                </Button>
+                <ClearCanvasDialog />
             </div>
 
             <div
@@ -112,7 +91,6 @@ export function Canvas({
                         })}
                     </SortableContext>
 
-                    {/* overlay component */}
                     <DragOverlay>
                         {activeItem ? (
                             <SortableItem data={activeItem} isOverlay />

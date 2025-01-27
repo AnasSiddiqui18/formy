@@ -1,14 +1,14 @@
 import { toUpperCase } from '@/lib/utils';
-import { LucideIcon } from 'lucide-react';
-import { AddIcon } from './add-icon';
 import { TCanvasData } from '@/types';
+import { LucideIcon as IconType } from 'lucide-react';
+import { AddIcon } from './add-icon';
 
 export function NodeBox({
     data,
 }: {
     data: {
         content: string;
-        icon: LucideIcon;
+        icon: IconType;
         type: TCanvasData['type'];
     };
 }) {

@@ -8,7 +8,8 @@ type StoreT = {
         id: string | null,
         type: T,
     ) => Extract<TCanvasData, { type: T }> | null;
-    isOpen: boolean;
+    isPreviewCardOpen: boolean;
+    name: string;
 };
 
 export const store = proxy<StoreT>({
@@ -24,5 +25,6 @@ export const store = proxy<StoreT>({
 
         return nodeById as Extract<TCanvasData, { type: T }> | null;
     },
-    isOpen: false,
+    isPreviewCardOpen: false,
+    name: 'sam',
 });

@@ -2,10 +2,10 @@
 
 import { User } from '@/db/schema';
 import { auth } from '@/lib/auth';
-import { ReactNode, createContext, useContext, useState } from 'react';
+import { ReactNode, createContext, useContext } from 'react';
 
 type userContextType = {
-    user: User;
+    user: User | null;
 };
 
 type userT = NonNullable<Awaited<ReturnType<typeof auth.getUser>>>;
@@ -21,9 +21,9 @@ export function UserProvider({
     children: ReactNode;
     userPromise: userT;
 }) {
-    const [user, _] = useState<User>(userPromise);
-
     return (
-        <userContext.Provider value={{ user }}>{children}</userContext.Provider>
+        <userContext.Provider value={{ user: userPromise.data }}>
+            {children}
+        </userContext.Provider>
     );
 }

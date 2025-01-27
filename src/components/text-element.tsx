@@ -1,13 +1,12 @@
 'use client';
 
+import { useSnapshot } from '@/hooks/use-snapshot';
+import { cn, toUpperCase } from '@/lib/utils';
+import { store } from '@/store';
+import { TButton, TDescription, THeading } from '@/types';
+import { SyntheticListenerMap } from '@dnd-kit/core/dist/hooks/utilities';
 import { GripVertical, Trash } from 'lucide-react';
 import { Separator } from './ui/separator';
-import { store } from '@/store';
-import { ExtractFormID, cn, toUpperCase } from '@/lib/utils';
-import { deleteCanvasEl, isNodePresentInDB } from '@/actions/form';
-import { useSnapshot } from 'valtio';
-import { SyntheticListenerMap } from '@dnd-kit/core/dist/hooks/utilities';
-import { TButton, TDescription, THeading } from '@/types';
 
 export function TextElement({
     data,
@@ -17,42 +16,24 @@ export function TextElement({
     listeners?: SyntheticListenerMap | undefined;
 }) {
     const { currentSelectedNode, canvasData } = useSnapshot(store);
-    const formID = ExtractFormID();
-
     const selectedNode = store.get(currentSelectedNode, 'heading');
 
-    function updateNodeSelection(nodeID: string) {
-        if (store.currentSelectedNode === nodeID) return;
+    function updateNodeSelection(nodeId: string) {
+        if (store.currentSelectedNode === nodeId) return;
 
         store.currentSelectedNode = null;
 
         setTimeout(() => {
-            store.currentSelectedNode = nodeID;
+            store.currentSelectedNode = nodeId;
         }, 0);
     }
 
     async function deleteEl() {
-        const nodePresent = await isNodePresentInDB({
-            formId: formID,
-            nodeId: data.id,
-        });
-
-        if (nodePresent.success) {
-            const response = await deleteCanvasEl({
-                formId: formID,
-                nodeId: data.id,
-            });
-
-            if (!response?.success) {
-                console.error('error while deleting the node', response);
-                return;
-            }
-        }
-
-        if (selectedNode?.id === data.id) {
+        if (store.currentSelectedNode === data.id) {
             store.currentSelectedNode = null;
-            store.canvasData = store.canvasData.filter((e) => e.id !== data.id);
         }
+
+        store.canvasData = store.canvasData.filter((e) => e.id !== data.id);
     }
 
     return (
@@ -77,7 +58,10 @@ export function TextElement({
                     </h3>
                     <Trash
                         className="text-orange-500 hover:text-orange-600"
-                        onClick={deleteEl}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            deleteEl();
+                        }}
                     />
                 </div>
                 <Separator className="w-full bg-gray-400" />

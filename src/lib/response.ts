@@ -4,7 +4,7 @@ export const sendSuccess = <T>(data: T) => ({
     message: null,
 });
 
-export const sendError = <T>(message: T) => ({
+export const sendError = (message: string) => ({
     success: false as const,
     message,
     data: null,
@@ -12,4 +12,4 @@ export const sendError = <T>(message: T) => ({
 
 export type ResponseType<T> =
     | ReturnType<typeof sendSuccess<T>>
-    | ReturnType<typeof sendError<T>>;
+    | ReturnType<typeof sendError>;

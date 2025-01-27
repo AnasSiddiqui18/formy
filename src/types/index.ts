@@ -1,3 +1,4 @@
+import { store } from '@/store';
 import { LucideIcon } from 'lucide-react';
 
 export type THeading = {
@@ -36,12 +37,34 @@ export type TButton = {
 
 export type TCanvasData = THeading | TDescription | TInput | TButton;
 
-export type supportedFontsT = { value: string; name: string };
+export type TsupportedFonts = { value: string; name: string };
 
-export type componentsT = {
+export type Tcomponents = {
     content: string;
     icon: LucideIcon;
     type: TCanvasData['type'];
 };
 
-export type TStatus = 'INACTIVE' | 'PUBLISHED' | 'DRAFT';
+export type TStatus = 'PUBLISHED' | 'DRAFT';
+
+export type TStore = typeof store;
+
+export type Product = {
+    name: string;
+    supplier: string;
+    sku: string;
+    category:
+        | 'Electronics'
+        | 'Furniture'
+        | 'Clothing'
+        | 'Books'
+        | 'Toys'
+        | 'Beauty'
+        | 'Sports'
+        | 'Home Decor'
+        | 'Home Appliances'
+        | 'Others';
+    status: 'Published' | 'Inactive' | 'Draft';
+    quantityInStock: number;
+    price: number;
+};
