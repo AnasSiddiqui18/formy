@@ -19,28 +19,6 @@ const Header = ({ user }: { user: User | null }) => {
 
             <div className="flex items-center gap-5">
                 {user ? (
-                    // ! remove this div before commiting (Notification Feat)
-
-                    // <div className="flex items-center gap-7">
-                    //     <Popover>
-                    //         <PopoverTrigger asChild>
-                    //             <div className="relative">
-                    //                 <BellIcon size={30} />
-                    //                 <div className="absolute -top-1 right-0 size-3 rounded-full bg-red-500"></div>
-                    //             </div>
-                    //         </PopoverTrigger>
-                    //         <PopoverContent className="w-80 mr-32 h-60">
-                    //             <div className="flex items-center justify-center h-full">
-                    //                 <div className="flex flex-col items-center gap-3">
-                    //                     <MailX size={40} className='text-primary' />
-                    //                     <span className="text-gray-400">
-                    //                         No Messages...
-                    //                     </span>
-                    //                 </div>
-                    //             </div>
-                    //         </PopoverContent>
-                    //     </Popover>
-                    // </div>
                     <UserMenu user={user} />
                 ) : (
                     <Button
